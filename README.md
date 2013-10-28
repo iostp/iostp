@@ -1,6 +1,6 @@
 # Internet of Schools Things Portal
 
-* **Author**   - Robert Light     light@MouseToMouse.com
+* **Author**   - Robert Light     iostp@MouseToMouse.com
 
 * **Copyright** © 2003-2013 LogMeIn, Inc.
 
