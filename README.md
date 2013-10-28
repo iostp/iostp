@@ -18,8 +18,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 *Participate* in the creation of [The Internet of Schools Things Portal](http://iostp.org/)
 
-
-
 This portal can installed in an AWS instance configured by following the directions in:
 
 >   aws-info/AWS-Provisioning-Instructions.txt
