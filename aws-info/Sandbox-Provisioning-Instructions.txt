@@ -46,8 +46,9 @@ AWS Provisioning Procedure:
        $ cd /usr/bin
        $ sudo ln -s /opt/bitnami/php/bin/php php
 
-  8) create an admin user (1st user becomes administrator)
-      in browser, goto: http://iostp.org/userAdmin/register.php
+  8) setup the userAdmin database tables
+      1) cd install
+      2) ./restoreUserAdminDB.php --backup=userAdminDB.sql
 
   9) freshen the xively cached data
        In production mode:
