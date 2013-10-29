@@ -37,7 +37,7 @@ AWS Provisioning Procedure:
         $ cd [rootDir]/iostp/install
         $ \BitNami\wampstackXXX\php\php.exe install.php --htdocs=\BitNami\wampstackXXX\apache2
      linux:
-        $ sudo ./install.php --ht.docs=/opt/bitnami/apache2/htdocs
+        $ sudo ./install.php --htdocs=/opt/bitnami/apache2/htdocs
 
   6) change /opt/bitnami/php/etc/php.ini,  uncomment/enable 'sendmail_path' to read:
           sendmail_path = "env -i /usr/sbin/sendmail -t -i"
