@@ -6,33 +6,31 @@ AWS Provisioning Procedure:
        c) choose:
             *) linux:    lampstack http://bitnami.com/stack/lamp
             *) windows:  wampstack http://bitnami.com/stack/wamp
+            *) mac:      mampstack http://bitnami.com/stack/mamp
        d) download the installer
-  1) As you deploy your vm, you have to change the security group to allow connection to port 22,443,80 from 0.0.0.0/0.
-     This can be changed after the instance is deployed.
 
-
-  4) setup mysql so that the client can be used without issuing the "use_lampstack" command to setup environment
+  2) setup mysql so that the client can be used without issuing the "use_lampstack" command to setup environment
         $ sudo mkdir /var/run/mysqld
         $ cd /var/run/mysqld
         $ sudo ln -s /opt/bitnami/mysql/tmp/mysql.sock mysqld.sock
 
-  5) login to mysql:
+  3) login to mysql:
         $ cd /opt/bitnami
         $ ./use_lampstack
         $ mysql -u root -pbitnami
         mysql> set password for root@localhost = PASSWORD('s3cr3t');
         mysql> create database iostp;
 
-  5a) if you are using lamp, install php5-mysql packages
+  3a) if you are using lamp, install php5-mysql packages
 
-  6) pull the release down from github
+  4) pull the release down from github
         $ cd [rootDir];
         $ git clone https://github.com/robertlight/iostp.git
     or freshen it
         $ cd [rootDir]/iostp
         $ git pull
 
-  7) Install the IOSTP portal software:
+  5) Install the IOSTP portal software:
         $ cd [root-dir]/iostp/install
      windows:
         $ mkdir /tmp
@@ -41,22 +39,22 @@ AWS Provisioning Procedure:
      linux:
         $ sudo ./install.php --ht.docs=/opt/bitnami/apache2/htdocs
 
-  8) change /opt/bitnami/php/etc/php.ini,  uncomment/enable 'sendmail_path' to read:
+  6) change /opt/bitnami/php/etc/php.ini,  uncomment/enable 'sendmail_path' to read:
           sendmail_path = "env -i /usr/sbin/sendmail -t -i"
 
-  9) make php available as a shell script processor
+  7) make php available as a shell script processor
        $ cd /usr/bin
        $ sudo ln -s /opt/bitnami/php/bin/php php
 
-  10) create an admin user (1st user becomes administrator)
+  8) create an admin user (1st user becomes administrator)
       in browser, goto: http://iostp.org/userAdmin/register.php
 
-  11) freshen the xively cached data
+  9) freshen the xively cached data
        In production mode:
           $ /usr/bin/freshenData.php
        In sandbox mode:
           $ /tmp/freshenData.php
 
-  12) Setup a user "xively" which will run the freshenData.php cron job
+  10) Setup a user "xively" which will run the freshenData.php cron job
        $ sudo adduser --ingroup user xively
        $ sudo passwd s3cr3t-xively!
