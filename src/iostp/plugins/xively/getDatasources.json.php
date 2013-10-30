@@ -18,7 +18,7 @@ $tags = $_GET['tags'];
 
 
 
-$rawQuery = "select distinct DATASTREAMS.UID as DS_UID, DATASTREAMS.UNITS AS UNITS, DATASTREAMS.SYMBOL AS SYMBOL FROM DATASTREAMS INNER JOIN DATASTREAM_TAG on DATASTREAM_TAG.DS_UID=DATASTREAMS.UID";
+$rawQuery = "select distinct DATASTREAMS.UID as DS_UID, DATASTREAMS.UNITS AS UNITS, DATASTREAMS.SYMBOL AS SYMBOL, FEEDS.TITLE AS FEED_TITLE FROM DATASTREAMS INNER JOIN DATASTREAM_TAG on DATASTREAM_TAG.DS_UID=DATASTREAMS.UID INNER JOIN FEEDS on DATASTREAMS.FEED_ID=FEEDS.FEED_ID";
 $rawQuery .=" WHERE (";
 
 $count = 0;
@@ -33,14 +33,13 @@ $arr = [];
 if( $count > 0 ) {
     $rawQuery = rtrim($rawQuery," OR ");
     $rawQuery .= ")";
-//    $params[] = $count;
 
     trigger_error("SQL:   ".$rawQuery, E_USER_NOTICE);
 
     $results = $_db->rawQuery($rawQuery,$params);
 
     foreach ($results as $row ) {
-        $arr[] = '{"datastream" : "'.$row['DS_UID'].'", "units" : "'.$row['UNITS'].'", "symbol" : "'.$row['SYMBOL'].'"}';
+        $arr[] = '{"datastream" : "'.$row['DS_UID'].'","feed_title" : "'.$row['FEED_TITLE'].'", "units" : "'.$row['UNITS'].'", "symbol" : "'.$row['SYMBOL'].'"}';
     }
 }
 //

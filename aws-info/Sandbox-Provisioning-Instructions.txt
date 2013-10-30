@@ -25,7 +25,7 @@ AWS Provisioning Procedure:
 
   4) pull the release down from github
         $ cd [rootDir];
-        $ git clone https://github.com/robertlight/iostp.git
+        $ git clone https://github.com/iostp/iostp.git
     or freshen it
         $ cd [rootDir]/iostp
         $ git pull
@@ -47,7 +47,7 @@ AWS Provisioning Procedure:
        $ sudo ln -s /opt/bitnami/php/bin/php php
 
   8) setup the userAdmin database tables
-      1) cd install
+      1) cd [root-dir]/iostp/install
       2) ./restoreUserAdminDB.php --backup=userAdminDB.sql
 
   9) freshen the xively cached data

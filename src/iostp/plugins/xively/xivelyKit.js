@@ -13,6 +13,10 @@ XivelyKit.prototype = Object.create(ObservationKit.prototype);  //inherit Observ
 
 XivelyKit.prototype.constructor = XivelyKit;
 
+/**
+ * return a (deep) duplicate of the kit
+ * @returns {XivelyKit}
+ */
 XivelyKit.prototype.clone = function() {
     var other = new XivelyKit(this.getName());
     other.setId(this.getId());
@@ -115,7 +119,13 @@ XivelyKit.prototype.updateSelectList = function() {
     $.getJSON('plugins/xively/getDatasources.json.php?'+query.join("&"), function(data){
         $("#ds_select").empty();
         $.each( data, function(idx, dsItem) {
-            $("#ds_select").append("<option value='"+dsItem.datastream+"!"+dsItem.units+"'>"+dsItem.datastream+(dsItem.units=="" ? "" : " ("+dsItem.units+")")+"</option>");
+            var dsUnits = dsItem.units=="" ? "" : " ("+dsItem.units+")";
+            var dsName = dsItem.datastream;
+            if( dsItem.feed_title != '') {
+                var a = dsItem.datastream.split("!");
+                dsName = dsItem.feed_title+"("+a[0]+"):"+a[1];
+            }
+            $("#ds_select").append("<option value='"+dsItem.datastream+"!"+dsItem.units+"'>"+dsName+dsUnits+"</option>");
         });
     });
 
@@ -242,7 +252,13 @@ XivelyKit.prototype.createManageDSDialog = function() {
 
         $.each( myKit.kitConfig, function(idx, cfg) {
             var units = cfg.units=="" || cfg.units == undefined ? "" : " ("+cfg.units+")";
-            $("#manage_ds_select").append("<option value='"+cfg.datastream+"'>"+ (cfg.name ? (cfg.name + " ["+cfg.datastream+"] ") : cfg.datastream) + units+"</option>");
+
+            var a = cfg.datastream.split("!");
+            var lbl = "("+a[0]+") "+a[1];
+            if( cfg.feedTitle != "" ) {
+                lbl = cfg.feedTitle+lbl;
+            }
+            $("#manage_ds_select").append("<option value='"+cfg.datastream+"'>"+ lbl + units+ ( cfg.name != "" ? (" Named: "+cfg.name) : "")+"</option>");
         });
         return false;
     });
@@ -284,7 +300,7 @@ XivelyKit.prototype.config = function() {
 
  //   this.kitConfig = JSON.parse(this.getConfig());
 
-    this.setupGraphs();
+//    this.setupGraphs();
 
     var fromTimestamp = $(myKit.tag+' .fromTimestamp');
     var toTimestamp = $(myKit.tag+' .toTimestamp');
@@ -517,19 +533,23 @@ XivelyKit.prototype.clearGraphs = function() {
 };
 
 XivelyKit.prototype.addGraph = function(i) {
-    this.graphs[i] = new Graph(i,this);
-    var rootId = this.tag.replace(/^#/,'');
-    $(this.tag+' .graphWrapperTemplate').clone().attr('id',rootId+'-graphWrapper-'+i).removeClass("graphWrapperTemplate").removeClass('hidden').appendTo($(this.tag+' .graphs'));
+    if( this.graphs[i] != undefined ) {
+        return this.graphs[i];
+    } else {
+        this.graphs[i] = new Graph(i,this);
+        var rootId = this.tag.replace(/^#/,'');
+        $(this.tag+' .graphWrapperTemplate').clone().attr('id',rootId+'-graphWrapper-'+i).removeClass("graphWrapperTemplate").removeClass('hidden').appendTo($(this.tag+' .graphs'));
 
-    var graphId = rootId+"-"+this.graphs[i].getId();
-    var legendId= graphId+'-legend';
-    var yAxisId=  graphId+'-yAxis';
+        var graphId = rootId+"-"+this.graphs[i].getId();
+        var legendId= graphId+'-legend';
+        var yAxisId=  graphId+'-yAxis';
 
-    this.graphs[i].setGraphDiv( $(this.tag+'-graphWrapper-'+i+' .graph').attr('id', graphId));
-    this.graphs[i].setLegendDiv($(this.tag+'-graphWrapper-'+i+' .legend').attr('id', legendId));
-    this.graphs[i].setYAxisDiv($(this.tag+'-graphWrapper-' +i+' .yAxis').attr('id', yAxisId));
-    $(this.tag+'-graphWrapper-' +i+' .yAxisLabel').attr('id', yAxisId+'Label');
-    return this.graphs[i];
+        this.graphs[i].setGraphDiv( $(this.tag+'-graphWrapper-'+i+' .graph').attr('id', graphId));
+        this.graphs[i].setLegendDiv($(this.tag+'-graphWrapper-'+i+' .legend').attr('id', legendId));
+        this.graphs[i].setYAxisDiv($(this.tag+'-graphWrapper-' +i+' .yAxis').attr('id', yAxisId));
+        $(this.tag+'-graphWrapper-' +i+' .yAxisLabel').attr('id', yAxisId+'Label');
+        return this.graphs[i];
+    }
 };
 
 /*
@@ -587,163 +607,168 @@ XivelyKit.prototype.addDatastream = function( cfg ) {
 
     var options = myKit.makeOptions( start, end );
 
-    xively.feed.get(feedId, function(feedData) {
- //       console.log( "adding new datastream: \n"+JSON.stringify(feedData));
-        if(feedData.datastreams) {
-            feedData.datastreams.forEach(function(datastream) {
-                var range = parseFloat(datastream.max_value) - parseFloat(datastream.min_value);
-                var ds_min_value = parseFloat(datastream.min_value) - .25*range;
-                var ds_max_value = Math.max(1.0, parseFloat(datastream.max_value) + .25*range);
-                if( datastream.id == datastreamId ) {
+    try {
+        xively.feed.get(feedId, function(feedData) {
+     //       console.log( "adding new datastream: \n"+JSON.stringify(feedData));
+            if(feedData.datastreams) {
+                feedData.datastreams.forEach(function(datastream) {
+                    var range = parseFloat(datastream.max_value) - parseFloat(datastream.min_value);
+                    var ds_min_value = parseFloat(datastream.min_value) - .25*range;
+                    var ds_max_value = Math.max(1.0, parseFloat(datastream.max_value) + .25*range);
+                    if( datastream.id == datastreamId ) {
 
-                    if( addToGraph === false ) { //we're creating a new graph
-                        if( maxGraphId >= 0 ) {
-                            slider = myKit.getGraph(maxGraphId).getSlider();
-                        }
-                        addToGraph = myKit.addGraph(++maxGraphId);
-                    }
-                    cfg.index = maxGraphId;
-                    cfg.units = (datastream.unit && datastream.unit.label) ? datastream.unit.label : "no units";
-                    addToGraph.setUnits(cfg.units);
-
-                    xively.datastream.history(feedId, datastreamId, options, function(datastreamData) {
-                        // Historical Datapoints
-//                        if( !datastreamData.datapoints ) {
-//                            alert("No data found for datastream");
-//                        } else {
-
-                            var points = [];
-
-                            // Add Each Datapoint to Array
-                            if( datastreamData.datapoints != undefined ) {
-                                addToGraph.hasData();
-                                if( new Date(datastreamData.datapoints[0].at).getTime() > start.getTime() ) {
-                                    points.push({x: start.getTime()/1000, y: parseFloat(datastreamData.datapoints[0].value)})
-                                }
-                                datastreamData.datapoints.forEach(function(datapoint) {
-                                    points.push({x: new Date(datapoint.at).getTime()/1000.0, y: parseFloat(datapoint.value)});
-                                });
-                                if( new Date(datastreamData.datapoints[datastreamData.datapoints.length-1].at).getTime() < end.getTime() ) {
-//                                    console.log("added y="+ parseFloat(datastreamData.datapoints[datastreamData.datapoints.length-2].value));
-//                                    console.log("added y="+ parseFloat(datastreamData.datapoints[datastreamData.datapoints.length-1].value));
-                                    points.push({x: end.getTime()/1000, y: parseFloat(datastreamData.datapoints[datastreamData.datapoints.length-1].value)})
-                                }
-                            } else {  // no data - need to put dummy stuff in there so that a graph can be displayed.
-                                points.push( {x: start.getTime()/1000, y:0.0});
-                                points.push( {x:   end.getTime()/1000, y:0.0});
+                        if( addToGraph === false ) { //we're creating a new graph
+                            if( maxGraphId >= 0 ) {
+                                slider = myKit.getGraph(maxGraphId).getSlider();
                             }
-                            // Add Datapoints Array to Graph Series Array
-                            var series = {
-                                datastream: cfg.datastream,
-                                name: (cfg.name?cfg.name:datastream.id) + (datastreamData.datapoints == undefined ? " (no data)" : ""),
-                                data: points,
-                                color: addToGraph.getNextColor()
-                            };
+                            addToGraph = myKit.addGraph(++maxGraphId);
+                        }
+                        cfg.index = maxGraphId;
+                        cfg.units = (datastream.unit && datastream.unit.label) ? datastream.unit.label : "no units";
+                        cfg.feedTitle = feedData.title;
+                        addToGraph.setUnits(cfg.units);
 
-                            var rickshawGraph = null;
-                            if( addToGraph.getRickshawGraph() == undefined ) {
+                        xively.datastream.history(feedId, datastreamId, options, function(datastreamData) {
+                            // Historical Datapoints
+    //                        if( !datastreamData.datapoints ) {
+    //                            alert("No data found for datastream");
+    //                        } else {
 
-                                $(myKit.tag+'-'+addToGraph.getId()).empty();  //get rid of anything that is currently there
+                                var points = [];
 
-                                // Build Graph
-                                console.log("about to create a rickshaw graph on id: "+myKit.tag+'-'+addToGraph.getId());
-                                rickshawGraph = new Rickshaw.Graph( {
-                                    element: document.querySelector(myKit.tag+'-'+addToGraph.getId()),
-                                    width: 600,
-                                    height: 200,
-                                    renderer: 'line',
-                                    interpolation: "linear",
-                                    min: addToGraph.isEmpty() ? 0.0 : ds_min_value,
-                                    max: ds_max_value,
-                                    padding: {
-                                        top: 0.02,
-                                        right: 0.02,
-                                        bottom: 0.02,
-                                        left: 0.02
-                                    },
-                                    series: [series]
-                                });
-
-                                if( ! slider ) {
-                                    slider = new Rickshaw.Graph.RangeSlider({
-                                        graph: [rickshawGraph],
-                                        element: $(myKit.tag + ' .slider'),
-                                        onslide: function(min,max) {
-                                            var tzOffset = new Date().getTimezoneOffset();
-                                            $(myKit.tag+' .fromTimestamp').datetimepicker("setDate", new Date(tzOffset*60*1000+min*1000));
-                                            $(myKit.tag+' .toTimestamp').datetimepicker("setDate", new Date(tzOffset*60*1000+max*1000));
-                                        }
+                                // Add Each Datapoint to Array
+                                if( datastreamData.datapoints != undefined ) {
+                                    addToGraph.hasData();
+                                    if( new Date(datastreamData.datapoints[0].at).getTime() > start.getTime() ) {
+                                        points.push({x: start.getTime()/1000, y: parseFloat(datastreamData.datapoints[0].value)})
+                                    }
+                                    datastreamData.datapoints.forEach(function(datapoint) {
+                                        points.push({x: new Date(datapoint.at).getTime()/1000.0, y: parseFloat(datapoint.value)});
                                     });
-                                    $(myKit.tag+' .timeControl').removeClass("hidden");
+                                    if( new Date(datastreamData.datapoints[datastreamData.datapoints.length-1].at).getTime() < end.getTime() ) {
+    //                                    console.log("added y="+ parseFloat(datastreamData.datapoints[datastreamData.datapoints.length-2].value));
+    //                                    console.log("added y="+ parseFloat(datastreamData.datapoints[datastreamData.datapoints.length-1].value));
+                                        points.push({x: end.getTime()/1000, y: parseFloat(datastreamData.datapoints[datastreamData.datapoints.length-1].value)})
+                                    }
+                                } else {  // no data - need to put dummy stuff in there so that a graph can be displayed.
+                                    points.push( {x: start.getTime()/1000, y:0.0});
+                                    points.push( {x:   end.getTime()/1000, y:0.0});
                                 }
-                                addToGraph.setRickshawGraph(rickshawGraph);
-                                addToGraph.setSlider(slider);
+                                // Add Datapoints Array to Graph Series Array
+                                var series = {
+                                    datastream: cfg.datastream,
+                                    name: (cfg.name != "" ? cfg.name : datastream.id) + (datastreamData.datapoints == undefined ? " (no data)" : ""),
+                                    data: points,
+                                    color: addToGraph.getNextColor()
+                                };
 
-                                // Define and Render X Axis (Time Values)
-                                var xAxis = new Rickshaw.Graph.Axis.Time( {
+                                var rickshawGraph = null;
+                                if( addToGraph.getRickshawGraph() == undefined ) {
+
+                                    $(myKit.tag+'-'+addToGraph.getId()).empty();  //get rid of anything that is currently there
+
+                                    // Build Graph
+                                    console.log("about to create a rickshaw graph on id: "+myKit.tag+'-'+addToGraph.getId());
+                                    rickshawGraph = new Rickshaw.Graph( {
+                                        element: document.querySelector(myKit.tag+'-'+addToGraph.getId()),
+                                        width: 600,
+                                        height: 200,
+                                        renderer: 'line',
+                                        interpolation: "linear",
+                                        min: addToGraph.isEmpty() ? 0.0 : ds_min_value,
+                                        max: ds_max_value,
+                                        padding: {
+                                            top: 0.02,
+                                            right: 0.02,
+                                            bottom: 0.02,
+                                            left: 0.02
+                                        },
+                                        series: [series]
+                                    });
+
+                                    if( ! slider ) {
+                                        slider = new Rickshaw.Graph.RangeSlider({
+                                            graph: [rickshawGraph],
+                                            element: $(myKit.tag + ' .slider'),
+                                            onslide: function(min,max) {
+                                                var tzOffset = new Date().getTimezoneOffset();
+                                                $(myKit.tag+' .fromTimestamp').datetimepicker("setDate", new Date(tzOffset*60*1000+min*1000));
+                                                $(myKit.tag+' .toTimestamp').datetimepicker("setDate", new Date(tzOffset*60*1000+max*1000));
+                                            }
+                                        });
+                                        $(myKit.tag+' .timeControl').removeClass("hidden");
+                                    }
+                                    addToGraph.setRickshawGraph(rickshawGraph);
+                                    addToGraph.setSlider(slider);
+
+                                    // Define and Render X Axis (Time Values)
+                                    var xAxis = new Rickshaw.Graph.Axis.Time( {
+                                        graph: rickshawGraph,
+                                        ticksTreatment: 'glow'
+                                    });
+                                    xAxis.render();
+                                    // Define and Render Y Axis (Datastream Values)
+                                    var yAxis = new Rickshaw.Graph.Axis.Y( {
+                                        element: document.querySelector(myKit.tag+'-'+addToGraph.getId()+'-yAxis'),
+                                        width: 50,
+                                        graph: rickshawGraph
+                                    });
+                                    yAxis.render();
+                                    $(myKit.tag+'-'+addToGraph.getId()+'-yAxisLabel').text(addToGraph.getUnits());
+
+                                } else {
+                                    series.color = addToGraph.getNextColor();
+                                    rickshawGraph = addToGraph.getRickshawGraph();
+                                    rickshawGraph.series.push(series);
+                                    rickshawGraph.min = Math.min(rickshawGraph.min, ds_min_value);
+                                    rickshawGraph.max = Math.max(rickshawGraph.max, ds_max_value);
+                                    rickshawGraph.update();
+                                }
+
+                                addToGraph.updateLegend();
+
+                                // Enable Datapoint Hover Values
+                                var hoverDetail = new Rickshaw.Graph.HoverDetail({
                                     graph: rickshawGraph,
-                                    ticksTreatment: 'glow'
+                                    formatter: function(series, x, y) {
+                                        return '<span class="detail_swatch" style="background-color: ' + series.color + ' padding: 4px;"></span>&nbsp;&nbsp;' + parseFloat(y) + '&nbsp;&nbsp;<br>';
+                                    }
                                 });
-                                xAxis.render();
-                                // Define and Render Y Axis (Datastream Values)
-                                var yAxis = new Rickshaw.Graph.Axis.Y( {
-                                    element: document.querySelector(myKit.tag+'-'+addToGraph.getId()+'-yAxis'),
-                                    width: 50,
-                                    graph: rickshawGraph
-                                });
-                                yAxis.render();
-                                $(myKit.tag+'-'+addToGraph.getId()+'-yAxisLabel').text(addToGraph.getUnits());
 
-                            } else {
-                                series.color = addToGraph.getNextColor();
-                                rickshawGraph = addToGraph.getRickshawGraph();
-                                rickshawGraph.series.push(series);
-                                rickshawGraph.min = Math.min(rickshawGraph.min, ds_min_value);
-                                rickshawGraph.max = Math.max(rickshawGraph.max, ds_max_value);
-                                rickshawGraph.update();
+                                rickshawGraph.render();
+
+    //                        }
+
+                            //we need to hook up the slider AND legends to the new graph
+
+                            $(myKit.tag+" .loading").addClass('hidden');
+                            slider.graph = myKit.getRickshawGraphs();
+
+                            var legend = addToGraph.getLegend();
+                            if( !legend ) {
+                                legend = new Rickshaw.Graph.Legend( {
+                                        element: document.querySelector(myKit.tag+'-'+addToGraph.getId()+'-legend'),
+                                        graph:   addToGraph.getRickshawGraph()
+                                } );
+                                addToGraph.setLegend(legend);
                             }
 
-                            addToGraph.updateLegend();
+                        });
 
-                            // Enable Datapoint Hover Values
-                            var hoverDetail = new Rickshaw.Graph.HoverDetail({
-                                graph: rickshawGraph,
-                                formatter: function(series, x, y) {
-                                    return '<span class="detail_swatch" style="background-color: ' + series.color + ' padding: 4px;"></span>&nbsp;&nbsp;' + parseFloat(y) + '&nbsp;&nbsp;<br>';
-                                }
-                            });
+                        myKit.kitConfig.push(cfg);
+                    }
+                });
 
-                            rickshawGraph.render();
+            } else {
+                window.alert("could not access feed: "+myKit.getFeedInfo(feedData, feedId));
+            }
 
-//                        }
+            myKit.updateManageDSBtn();
 
-                        //we need to hook up the slider AND legends to the new graph
-
-                        $(myKit.tag+" .loading").addClass('hidden');
-                        slider.graph = myKit.getRickshawGraphs();
-
-                        var legend = addToGraph.getLegend();
-                        if( !legend ) {
-                            legend = new Rickshaw.Graph.Legend( {
-                                    element: document.querySelector(myKit.tag+'-'+addToGraph.getId()+'-legend'),
-                                    graph:   addToGraph.getRickshawGraph()
-                            } );
-                            addToGraph.setLegend(legend);
-                        }
-
-                    });
-
-                    myKit.kitConfig.push(cfg);
-                }
-            });
-
-        } else {
-            window.alert("could not access feed");
-        }
-
-        myKit.updateManageDSBtn();
-
-    });
+        });
+    } catch (e) {
+        console.log("unknown feed: "+myKit.getFeedInfo(feedData,feedId));
+    }
     //******************************************************************************************************************
 
 };
@@ -819,6 +844,14 @@ XivelyKit.prototype.makeOptions = function (start, end) {
     return options;
 };
 
+XivelyKit.prototype.getFeedInfo = function( feedData, feedId ) {
+    var feedInfo = feedId;
+    if( feedData.title != undefined){
+        feedInfo = feedData.title+"("+feedData.id+")";
+    }
+    return feedInfo;
+};
+
 XivelyKit.prototype.makeGraphs = function(configData, start, end) {
 
     var myKit = this;
@@ -841,161 +874,167 @@ XivelyKit.prototype.makeGraphs = function(configData, start, end) {
         }
 
         var options = myKit.makeOptions( start, end );
+        try {
+            console.log("loading feed: "+feedId);
+            xively.feed.get(feedId, function(feedData) {
+                if(feedData.datastreams) {
+                    feedData.datastreams.forEach(function(datastream) {
+                        var range = parseFloat(datastream.max_value) - parseFloat(datastream.min_value);
+                        var ds_min_value = parseFloat(datastream.min_value) - .25*range;
+                        var ds_max_value = parseFloat(datastream.max_value) + .25*range;
+                        if( datastream.id == datastreamId ) {
+                            $(myKit.tag+" .loading").removeClass('hidden');
 
-        xively.feed.get(feedId, function(feedData) {
-            if(feedData.datastreams) {
-                feedData.datastreams.forEach(function(datastream) {
-                    var range = parseFloat(datastream.max_value) - parseFloat(datastream.min_value);
-                    var ds_min_value = parseFloat(datastream.min_value) - .25*range;
-                    var ds_max_value = parseFloat(datastream.max_value) + .25*range;
-                    if( datastream.id == datastreamId ) {
-                        $(myKit.tag+" .loading").removeClass('hidden');
+                            cfg.feedTitle = feedData.title;
 
-                        var graph = myKit.getGraph( graphIndex );
+                            console.log(" creating graphIndex: "+graphIndex);
+                            var graph = myKit.addGraph( graphIndex );
 
-                        graph.setUnits((datastream.unit && datastream.unit.label) ? datastream.unit.label : "no units");
+                            graph.setUnits((datastream.unit && datastream.unit.label) ? datastream.unit.label : "no units");
 
-                        xively.datastream.history(feedId, datastreamId, options, function(datastreamData) {
+                            xively.datastream.history(feedId, datastreamId, options, function(datastreamData) {
 
-                            var points = [];
+                                var points = [];
 
-                            // Add Each Datapoint to Array
-                            if( datastreamData.datapoints ) {
-                                graph.hasData();
-                                if( new Date(datastreamData.datapoints[0].at).getTime() > start.getTime() ) {
-                                    points.push({x: start.getTime()/1000, y: parseFloat(datastreamData.datapoints[0].value)})
-                                }
-                                datastreamData.datapoints.forEach(function(datapoint) {
-                                    points.push({x: new Date(datapoint.at).getTime()/1000.0, y: parseFloat(datapoint.value)});
-                                });
-                                if( new Date(datastreamData.datapoints[datastreamData.datapoints.length-1].at).getTime() < end.getTime() ) {
-//                                    console.log("added y="+ parseFloat(datastreamData.datapoints[datastreamData.datapoints.length-2].value));
-//                                    console.log("added y="+ parseFloat(datastreamData.datapoints[datastreamData.datapoints.length-1].value));
-                                    points.push({x: end.getTime()/1000, y: parseFloat(datastreamData.datapoints[datastreamData.datapoints.length-1].value)})
-                                }
-                            } else {  // no data - need to put dummy stuff in there so that a graph can be displayed.
-                                points.push( {x: start.getTime()/1000, y:0.0});
-                                points.push( {x:   end.getTime()/1000, y:0.0});
-                            }
-
-                            // Add Datapoints Array to Graph Series Array
-                            var series = {
-                                datastream: cfg.datastream,
-                                name: (cfg.name ? cfg.name : datastream.id) + (datastreamData.datapoints == undefined ? " (no data)" : "" ),
-                                data: points,
-                                color: graph.getNextColor()
-                            };
-
-                            var rickshawGraph = null;
-                            if( graph.getRickshawGraph() == undefined ) {
-
-                                console.log("about to create a rickshaw graph on id: "+myKit.tag+'-'+graph.getId());
-
-                                $(myKit.tag+'-'+graph.getId()).empty();  //get rid of anything that is currently there
-
-                                // Build Graph
-                                rickshawGraph = new Rickshaw.Graph( {
-                                    element: document.querySelector(myKit.tag+'-'+graph.getId()),
-                                    width: 600,
-                                    height: 200,
-                                    renderer: 'line',
-                                    interpolation: "linear",
-                                    min: graph.isEmpty() ? 0.0 : ds_min_value,
-                                    max: ds_max_value,
-                                    padding: {
-                                        top: 0.02,
-                                        right: 0.02,
-                                        bottom: 0.02,
-                                        left: 0.02
-                                    },
-                                    series: [series]
-                                });
-
-                                graph.setRickshawGraph(rickshawGraph);
-                            } else {
-                                console.log(" existing graph needs to be reconfigured");
-                                series.color = graph.getNextColor();
-                                rickshawGraph = graph.getRickshawGraph();
-                                rickshawGraph.series.push(series);
-                                rickshawGraph.min = graph.isEmpty() ? 0.0 : Math.min(rickshawGraph.min, ds_min_value);
-                                rickshawGraph.max = Math.max(rickshawGraph.max, ds_max_value);
-                                rickshawGraph.update();
-                            }
-
-                            rickshawGraph.render();
-
-                            // we have to do this delayed as we need to wait until all datastreams have loaded before we create the legends and hook up the slider.
-                            datastreamsToLoad--;
-                            if( delayedTimeout !== undefined) clearTimeout(delayedTimeout);
-                            delayedTimeout = setTimeout( function() {
-                                if( datastreamsToLoad == 0 ) {
-                                    $(myKit.tag+" .loading").addClass('hidden');
-                                    $(myKit.tag+' .timeControl').removeClass("hidden");
-                                    var slider = new Rickshaw.Graph.RangeSlider({
-                                        graph: myKit.getRickshawGraphs(),
-                                        element: $(myKit.tag + ' .slider'),
-                                        onslide: function(min,max) {
-                                            var tzOffset = new Date().getTimezoneOffset();
-                                            $(myKit.tag+' .fromTimestamp').datetimepicker("setDate", new Date(tzOffset*60*1000+min*1000));
-                                            $(myKit.tag+' .toTimestamp').datetimepicker("setDate", new Date(tzOffset*60*1000+max*1000));
-                                        }
+                                // Add Each Datapoint to Array
+                                if( datastreamData.datapoints ) {
+                                    graph.hasData();
+                                    if( new Date(datastreamData.datapoints[0].at).getTime() > start.getTime() ) {
+                                        points.push({x: start.getTime()/1000, y: parseFloat(datastreamData.datapoints[0].value)})
+                                    }
+                                    datastreamData.datapoints.forEach(function(datapoint) {
+                                        points.push({x: new Date(datapoint.at).getTime()/1000.0, y: parseFloat(datapoint.value)});
                                     });
-                                    for( var key in myKit.getGraphs() ) {
-                                        var graph = myKit.getGraphs()[key];
-                                        graph.setSlider(slider);
-                                        graph.setLegend(new Rickshaw.Graph.Legend( {
-                                                element: document.querySelector(myKit.tag+'-'+graph.getId()+'-legend'),
-                                                graph:   graph.getRickshawGraph()
-                                        }));
-                                        if( graph.getRickshawGraph().series.length > 1 ) {
-                                            graph.setToggle(new Rickshaw.Graph.Behavior.Series.Toggle({
-                                                graph:  graph.getRickshawGraph(),
-                                                legend: graph.getLegend()
-                                            }));
-                                        }
+                                    if( new Date(datastreamData.datapoints[datastreamData.datapoints.length-1].at).getTime() < end.getTime() ) {
+                                        points.push({x: end.getTime()/1000, y: parseFloat(datastreamData.datapoints[datastreamData.datapoints.length-1].value)})
+                                    }
+                                } else {  // no data - need to put dummy stuff in there so that a graph can be displayed.
+                                    points.push( {x: start.getTime()/1000, y:0.0});
+                                    points.push( {x:   end.getTime()/1000, y:0.0});
+                                }
 
+                                // Add Datapoints Array to Graph Series Array
+                                var series = {
+                                    datastream: cfg.datastream,
+                                    name: (cfg.name != "" ? cfg.name : datastream.id) + (datastreamData.datapoints == undefined ? " (no data)" : "" ),
+                                    data: points,
+                                    color: graph.getNextColor()
+                                };
 
-                                        // Define and Render X Axis (Time Values)
-                                        var xAxis = new Rickshaw.Graph.Axis.Time( {
-                                            graph: graph.getRickshawGraph(),
-                                            ticksTreatment: 'glow'
-                                        });
-                                        xAxis.render();
+                                var rickshawGraph = null;
+                                if( graph.getRickshawGraph() == undefined ) {
 
-                                        // Define and Render Y Axis (Datastream Values)
-                                        console.log("creating yAxis: "+myKit.tag+'-'+graph.getId()+'-yAxis');
+                                    console.log("about to create a rickshaw graph on id: "+myKit.tag+'-'+graph.getId());
 
-                                        var yAxis = new Rickshaw.Graph.Axis.Y( {
-                                            width: 50,
-                       //                     height: 200,
-                                            element: document.querySelector(myKit.tag+'-'+graph.getId()+'-yAxis'),
-                                            graph: graph.getRickshawGraph(),
-                       //                     orientation: 'left',
-                                            tickFormat: Rickshaw.Fixtures.Number.formatKMBT
-                   //                         ticksTreatment: 'glow'
-                                        });
-                                        yAxis.render();
+                                    $(myKit.tag+'-'+graph.getId()).empty();  //get rid of anything that is currently there
 
-                                        $(myKit.tag+'-'+graph.getId()+'-yAxisLabel').text(graph.getUnits());
+                                    // Build Graph
+                                    rickshawGraph = new Rickshaw.Graph( {
+                                        element: document.querySelector(myKit.tag+'-'+graph.getId()),
+                                        width: 600,
+                                        height: 200,
+                                        renderer: 'line',
+                                        interpolation: "linear",
+                                        min: graph.isEmpty() ? 0.0 : ds_min_value,
+                                        max: ds_max_value,
+                                        padding: {
+                                            top: 0.02,
+                                            right: 0.02,
+                                            bottom: 0.02,
+                                            left: 0.02
+                                        },
+                                        series: [series]
+                                    });
 
-                                        // Enable Datapoint Hover Values
-                                        var hoverDetail = new Rickshaw.Graph.HoverDetail({
-                                            graph: graph.getRickshawGraph(),
-                                            formatter: function(series, x, y) {
-                                                return '<span class="detail_swatch" style="background-color: ' + series.color + ' padding: 4px;"></span>&nbsp;&nbsp;' + parseFloat(y) + '&nbsp;&nbsp;<br>';
+                                    graph.setRickshawGraph(rickshawGraph);
+                                } else {
+                                    console.log(" existing graph needs to be reconfigured");
+                                    series.color = graph.getNextColor();
+                                    rickshawGraph = graph.getRickshawGraph();
+                                    rickshawGraph.series.push(series);
+                                    rickshawGraph.min = graph.isEmpty() ? 0.0 : Math.min(rickshawGraph.min, ds_min_value);
+                                    rickshawGraph.max = Math.max(rickshawGraph.max, ds_max_value);
+                                    rickshawGraph.update();
+                                }
+
+                                rickshawGraph.render();
+
+                                // we have to do this delayed as we need to wait until all datastreams have loaded before we create the legends and hook up the slider.
+                                datastreamsToLoad--;
+                                if( delayedTimeout !== undefined) clearTimeout(delayedTimeout);
+                                delayedTimeout = setTimeout( function() {
+                                    if( datastreamsToLoad == 0 ) {
+                                        $(myKit.tag+" .loading").addClass('hidden');
+                                        $(myKit.tag+' .timeControl').removeClass("hidden");
+                                        var slider = new Rickshaw.Graph.RangeSlider({
+                                            graph: myKit.getRickshawGraphs(),
+                                            element: $(myKit.tag + ' .slider'),
+                                            onslide: function(min,max) {
+                                                var tzOffset = new Date().getTimezoneOffset();
+                                                $(myKit.tag+' .fromTimestamp').datetimepicker("setDate", new Date(tzOffset*60*1000+min*1000));
+                                                $(myKit.tag+' .toTimestamp').datetimepicker("setDate", new Date(tzOffset*60*1000+max*1000));
                                             }
                                         });
-                                    }
-                                }
-                            }, 250);
-                        });
-                    }
-                });
+                                        for( var key in myKit.getGraphs() ) {
+                                            var graph = myKit.getGraphs()[key];
+                                            graph.setSlider(slider);
+                                            graph.setLegend(new Rickshaw.Graph.Legend( {
+                                                    element: document.querySelector(myKit.tag+'-'+graph.getId()+'-legend'),
+                                                    graph:   graph.getRickshawGraph()
+                                            }));
+                                            if( graph.getRickshawGraph().series.length > 1 ) {
+                                                graph.setToggle(new Rickshaw.Graph.Behavior.Series.Toggle({
+                                                    graph:  graph.getRickshawGraph(),
+                                                    legend: graph.getLegend()
+                                                }));
+                                            }
 
-            } else {
-                window.alert("no datastreams found");
-            }
-        });
+
+                                            // Define and Render X Axis (Time Values)
+                                            var xAxis = new Rickshaw.Graph.Axis.Time( {
+                                                graph: graph.getRickshawGraph(),
+                                                ticksTreatment: 'glow'
+                                            });
+                                            xAxis.render();
+
+                                            // Define and Render Y Axis (Datastream Values)
+                                            console.log("creating yAxis: "+myKit.tag+'-'+graph.getId()+'-yAxis');
+
+                                            var yAxis = new Rickshaw.Graph.Axis.Y( {
+                                                width: 50,
+                           //                     height: 200,
+                                                element: document.querySelector(myKit.tag+'-'+graph.getId()+'-yAxis'),
+                                                graph: graph.getRickshawGraph(),
+                           //                     orientation: 'left',
+                                                tickFormat: Rickshaw.Fixtures.Number.formatKMBT
+                       //                         ticksTreatment: 'glow'
+                                            });
+                                            yAxis.render();
+
+                                            $(myKit.tag+'-'+graph.getId()+'-yAxisLabel').text(graph.getUnits());
+
+                                            // Enable Datapoint Hover Values
+                                            var hoverDetail = new Rickshaw.Graph.HoverDetail({
+                                                graph: graph.getRickshawGraph(),
+                                                formatter: function(series, x, y) {
+                                                    return '<span class="detail_swatch" style="background-color: ' + series.color + ' padding: 4px;"></span>&nbsp;&nbsp;' + parseFloat(y) + '&nbsp;&nbsp;<br>';
+                                                }
+                                            });
+                                        }
+                                    }
+                                }, 250);
+                            });
+                        }
+                    });
+                } else {
+                    window.alert("No datastreams found in feed: "+myKit.getFeedInfo(feedData,feedId)+"\nRemoving datastream: "+datastreamId+ " from your kit");;
+                    myKit.kitConfig.splice( myKit.kitConfig.indexOf(cfg),1);  //remove
+                    datastreamsToLoad--;
+                }
+            });
+        } catch (e) {
+            console.log("Exception: "+e+" - Unable to get data for feed: "+myKit.getFeedInfo(feedData, feedId));
+        }
 	});
 
 

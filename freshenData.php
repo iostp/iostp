@@ -135,7 +135,7 @@ for( $page = 0; $nFeedsProcessed < $nFeedsToProcess || $nFeedsToProcess==-1; $pa
        $live = false;
        if( property_exists($feed,'tags') ) {
            foreach( $feed->tags as $tag ) {
-              if( $tag == "L1V3" ) $live = true;
+              if( strcasecmp($tag,"L1V3") == 0 ) $live = true;
            }
        }
        if( $includeNonLive || $live ) {
