@@ -18,21 +18,36 @@ $tags = $_GET['tags'];
 
 
 
-$rawQuery = "select distinct DATASTREAMS.UID as DS_UID, DATASTREAMS.UNITS AS UNITS, DATASTREAMS.SYMBOL AS SYMBOL, FEEDS.TITLE AS FEED_TITLE FROM DATASTREAMS INNER JOIN DATASTREAM_TAG on DATASTREAM_TAG.DS_UID=DATASTREAMS.UID INNER JOIN FEEDS on DATASTREAMS.FEED_ID=FEEDS.FEED_ID";
-$rawQuery .=" WHERE (";
+$feedQuery = "select distinct FEEDS.FEED_ID FROM FEEDS INNER JOIN FEED_TAG on FEED_TAG.FEED_ID=FEEDS.FEED_ID";
 
 $count = 0;
 $params = [];
+$arr = [];
+$feedQueryWhere = "";
 foreach( $tags as $tag ) {
-   $rawQuery .= "DATASTREAM_TAG.TAG=? OR ";
+   $feedQueryWhere .= "FEED_TAG.TAG=? OR ";
    $count++;
    $params[] = $tag;
 }
-
-$arr = [];
 if( $count > 0 ) {
-    $rawQuery = rtrim($rawQuery," OR ");
-    $rawQuery .= ")";
+    $feedQueryWhere = rtrim($feedQueryWhere," OR ");
+    $feedQuery .= (" WHERE (".$feedQueryWhere.")");
+}
+
+
+$rawQuery = "select distinct DATASTREAMS.UID as DS_UID, DATASTREAMS.FEED_ID, DATASTREAMS.UNITS AS UNITS, DATASTREAMS.SYMBOL AS SYMBOL, FEEDS.TITLE AS FEED_TITLE FROM DATASTREAMS INNER JOIN DATASTREAM_TAG on DATASTREAM_TAG.DS_UID=DATASTREAMS.UID INNER JOIN FEEDS on DATASTREAMS.FEED_ID=FEEDS.FEED_ID";
+
+$rawQueryWhere = "";
+foreach( $tags as $tag ) {
+   $rawQueryWhere .= "DATASTREAM_TAG.TAG=? OR ";
+   $params[] = $tag;
+}
+
+
+if( $count > 0 ) {
+    $rawQueryWhere .= (" DATASTREAMS.FEED_ID IN (".$feedQuery.")");
+
+    $rawQuery .= (" WHERE (".$rawQueryWhere.")");
 
     trigger_error("SQL:   ".$rawQuery, E_USER_NOTICE);
 
