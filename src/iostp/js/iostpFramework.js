@@ -195,9 +195,6 @@ var IOSTP = (function () {   // declare 'Singleton' as the returned value of a s
 
 })(); // self execute
 
-
-
-
 function IostpException(msg, obj) {
     this.message = msg;
     this.name = "IostpException";

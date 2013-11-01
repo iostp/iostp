@@ -36,7 +36,7 @@ CREATE TABLE `uc_configuration` (
 
 LOCK TABLES `uc_configuration` WRITE;
 /*!40000 ALTER TABLE `uc_configuration` DISABLE KEYS */;
-INSERT INTO `uc_configuration` VALUES (1,'website_name','IOSTP Portal'),(2,'website_url','IOSTP.org/'),(3,'email','noreply@IOSTP.org'),(4,'activation','true'),(5,'resend_activation_threshold','0'),(6,'language','/userAdmin/models/languages/en.php'),(7,'template','models/site-templates/default.css');
+INSERT INTO `uc_configuration` VALUES (1,'website_name','IOSTP Portal'),(2,'website_url','IOSTP.org/'),(3,'email','noreply@IOSTP.org'),(4,'activation','true'),(5,'resend_activation_threshold','0'),(6,'language','/userAdmin/models/languages/en.php'),(7,'template','/userAdmin/models/site-templates/default.css');
 /*!40000 ALTER TABLE `uc_configuration` ENABLE KEYS */;
 UNLOCK TABLES;
 

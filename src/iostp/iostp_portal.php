@@ -14,7 +14,6 @@ if( !isUserLoggedIn() ) {
     die();
 }
 ?>
-<!DOCTYPE html>
 <!--[if IE 8]> <html class="no-js lt-ie9" lang="en" > <![endif]-->
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 
@@ -42,6 +41,7 @@ if( !isUserLoggedIn() ) {
 	<script type="text/javascript" src="js/jquery-1.8.3.js"></script>
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.js"></script>
     <script type="text/javascript" src="js/jquery-ui-1.9.2.custom.js"></script>
+    <script type="text/javascript" src="js/jquery.form.js"></script>
 	<script type="text/javascript" src="js/custom.modernizr.js"></script>
 	<script type="text/javascript" src="plugins/xively/xivelyjs-1.0.0.min.js"></script>
 	<script type="text/javascript" src="js/d3.v2.js"></script>
@@ -65,10 +65,14 @@ if( !isUserLoggedIn() ) {
        function addObservationKit() {
           var kitName = $("#kit_name").val();
           var kitType = $("#kit_types input:checked")[0].value;
-          var kit = IOSTP.getInstance().getKitOfType(kitType);
-          kit.setName(kitName);
-          addTab(kit);
-          IOSTP.getInstance().addKit(kit);
+          if( kitType == 'upload' ) {
+              $('#uploadFileBtn').click();
+          } else {
+              var kit = IOSTP.getInstance().getKitOfType(kitType);
+              kit.setName(kitName);
+              addTab(kit);
+              IOSTP.getInstance().addKit(kit);
+          }
        }
        function addTab(kit) {
            $tabs = $('#tabs').tabs({closable: true});
@@ -86,6 +90,15 @@ if( !isUserLoggedIn() ) {
        }
 
        $(function() {
+//           $('#uploadForm').ajaxForm({
+//               beforeSubmit: function() {
+//                   alert('before submit');
+//               },
+//               success: function(data) {
+//                       alert(data);
+ //              }
+ //          });
+
            IOSTP.getInstance().configure('<?php
 
 $mysqli = new mysqli($db_host, $db_user, $db_pass, $db_name);
@@ -120,6 +133,10 @@ if(mysqli_connect_errno()) {
                first = false;
            });
 
+           if( window.FileReader && window.FileList ) {
+               $("#kit_types").append("<input type='radio' name='kit_type' value='upload' >Upload file</input><br/>");
+           }
+
            var addObservationKitDialog = $( "#dialog" ).dialog({
               autoOpen: false,
               modal: true,
@@ -145,6 +162,7 @@ if(mysqli_connect_errno()) {
 //           });
 
            $('#addTab').click(function(){
+//               $('#uploadFileBtn').replaceWith( $('#uploadFileBtn').clone(true));
                addObservationKitDialog.dialog("open");
                return false;
            });
@@ -246,16 +264,25 @@ if(mysqli_connect_errno()) {
           <input type="text" name="kit_name" id="kit_name" value="" class="ui-widget-content ui-corner-all" />
           <label for="kit_types">What kind of kit?</label>
           <div id="kit_types"></div>
+
+          <div class="hidden">
+             <form name='uploadForm' id='uploadForm' action="/server/uploadKit.php" method="post" enctype="multipart/form-data">
+                <input id='uploadFileBtn' type="file" name="files[]" multiple/>
+             </form>
+          </div>
+
         </fieldset>
       </form>
     </div>
 
     <div style="margin:20px 0">
-                <a class="ui-state-default ui-corner-all" id="addTab" href="#" style="padding:6px 6px 6px 17px;text-decoration:none;position:relative">
-                    <span class="ui-icon ui-icon-plus" style="position:absolute;top:4px;left:1px"></span>
-                    Add a new Observation Kit
-                </a>
-            </div>
+        <a class="ui-state-default ui-corner-all" id="addTab" href="#" style="padding:6px 6px 6px 17px;text-decoration:none;position:relative">
+            <span class="ui-icon ui-icon-plus" style="position:absolute;top:4px;left:1px"></span>
+            Add a new Observation Kit
+        </a>
+    </div>
+
+
     <!-- Tabs -->
     <div id="tabs">
         <ul class="tabs-ul">
@@ -301,6 +328,24 @@ if(mysqli_connect_errno()) {
 
 	<script src="js/foundation.min.js"></script>
 	<script src="follows.js"></script>
+    <script language='javascript'>
 
+        function handleFileSelect(evt) {
+            var files = evt.target.files; // FileList object
+
+            for (var i = 0, file; file = files[i]; i++) {
+               var reader = new FileReader();
+               reader.onloadend = function(evt) {
+                  if( evt.target.readyState == FileReader.DONE) {
+                     alert(evt.target.result);
+                  }
+               };
+               var blob = file.slice(0, file.size);
+               reader.readAsBinaryString(blob);
+            }
+        }
+
+        document.getElementById('uploadFileBtn').addEventListener('change', handleFileSelect, false);
+    </script>
 </body>
 </html>
