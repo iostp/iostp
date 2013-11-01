@@ -162,8 +162,20 @@ if(mysqli_connect_errno()) {
 //           });
 
            $('#addTab').click(function(){
-//               $('#uploadFileBtn').replaceWith( $('#uploadFileBtn').clone(true));
+               $('#uploadFileBtn').replaceWith( $('#uploadFileBtn').clone(true));
+               document.getElementById('uploadFileBtn').addEventListener('change', handleFileSelect, false);
+
                addObservationKitDialog.dialog("open");
+               return false;
+           });
+           $('#downloadKit').click(function(){
+               var panelId = $('.ui-tabs-active').attr("aria-controls");
+               var i = $('#'+panelId).index()-1;
+               var kit = IOSTP.getInstance().getKitConfig(i);
+               $("#getKIT_form .kitData").val(JSON.stringify(kit));
+               $("#getKIT_form .kitName").val(kit.name);
+               $("#getKIT_form").submit();
+
                return false;
            });
 
@@ -280,6 +292,10 @@ if(mysqli_connect_errno()) {
             <span class="ui-icon ui-icon-plus" style="position:absolute;top:4px;left:1px"></span>
             Add a new Observation Kit
         </a>
+        <a class="ui-state-default ui-corner-all" id="downloadKit" href="#" style="padding:6px 6px 6px 17px;text-decoration:none;position:relative">
+            <span class="ui-icon ui-icon-plus" style="position:absolute;top:4px;left:1px"></span>
+            Download Kit
+        </a>
     </div>
 
 
@@ -320,6 +336,14 @@ if(mysqli_connect_errno()) {
 		<br/><br/><h2 class="subheader">Loading...</h2><br/><br/>
 	</div>
 
+    <iframe name="hidden_iframe_echoKit" style="display: none;"></iframe>
+    <form id="getKIT_form" target="hidden_iframe_echoKit" action="/server/echoKit.php" class="hidden" method="POST">
+        <input type="hidden" name="kitData" class="kitData"/>
+        <input type="hidden" name="kitName" class="kitName"/>
+    </form>
+
+
+
 	<script>
 		document.write('<script src=' +
 		('__proto__' in {} ? 'js/zepto' : 'js/jquery') +
@@ -329,7 +353,34 @@ if(mysqli_connect_errno()) {
 	<script src="js/foundation.min.js"></script>
 	<script src="follows.js"></script>
     <script language='javascript'>
+function stringifyOnce(obj, replacer, indent){
+    var printedObjects = [];
+    var printedObjectKeys = [];
 
+    function printOnceReplacer(key, value){
+        var printedObjIndex = false;
+        printedObjects.forEach(function(obj, index){
+            if(obj===value){
+                printedObjIndex = index;
+            }
+        });
+
+        if(printedObjIndex && typeof(value)=="object"){
+            return "(see " + value.constructor.name.toLowerCase() + " with key " + printedObjectKeys[printedObjIndex] + ")";
+        }else{
+            var qualifiedKey = key || "(empty key)";
+            printedObjects.push(value);
+            printedObjectKeys.push(qualifiedKey);
+            if(replacer){
+                return replacer(key, value);
+            }else{
+                return value;
+            }
+        }
+    }
+
+    return JSON.stringify(obj, printOnceReplacer, indent);
+    }
         function handleFileSelect(evt) {
             var files = evt.target.files; // FileList object
 
@@ -337,7 +388,17 @@ if(mysqli_connect_errno()) {
                var reader = new FileReader();
                reader.onloadend = function(evt) {
                   if( evt.target.readyState == FileReader.DONE) {
-                     alert(evt.target.result);
+                     try {
+                         var uploadedKit = JSON.parse(evt.target.result);
+                         var kit = IOSTP.getInstance().getKitOfType(uploadedKit.type);
+                         kit.setName(uploadedKit.name);
+                         addTab(kit);
+                         kit.setConfig(uploadedKit.configData);
+                         IOSTP.getInstance().addKit(kit);
+                         kit.config();
+                     } catch (e) {
+                         alert(e);
+                     }
                   }
                };
                var blob = file.slice(0, file.size);

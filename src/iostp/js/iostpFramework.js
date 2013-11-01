@@ -172,6 +172,16 @@ var IOSTP = (function () {   // declare 'Singleton' as the returned value of a s
             } else {
                 return this.kits;
             }
+        },
+
+        getKitConfig: function(i) {
+            var cfg = "";
+            $.each(this.kits, function(indx,kit) {
+                if( indx == i ) {
+                    cfg = { type: kit.getType(), name: kit.getName(), configData: kit.getConfig() };
+                }
+            });
+            return cfg;
         }
 
 
