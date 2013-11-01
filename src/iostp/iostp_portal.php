@@ -391,7 +391,8 @@ function stringifyOnce(obj, replacer, indent){
                      try {
                          var uploadedKit = JSON.parse(evt.target.result);
                          var kit = IOSTP.getInstance().getKitOfType(uploadedKit.type);
-                         kit.setName(uploadedKit.name);
+                         var kitName = $("#kit_name").val();
+                         kit.setName(kitName=='' ? uploadedKit.name : kitName);
                          addTab(kit);
                          kit.setConfig(uploadedKit.configData);
                          IOSTP.getInstance().addKit(kit);
