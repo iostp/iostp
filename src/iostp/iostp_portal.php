@@ -57,7 +57,7 @@ if( !isUserLoggedIn() ) {
        register them with the system and make them available to everyone or particular users...just set up php to
        inject a new javascript tag here for every appropriate kit module (it may be dependent on student or teacher id.
      -->
-    <script type="text/javascript" src="plugins/xively/xivelyKit.js"></script>
+    <script type="text/javascript" src="plugins/xively/xivelyKit.js?v=1"></script>
     <script type="text/javascript" src="js/exampleKit.js"></script>
 
 
