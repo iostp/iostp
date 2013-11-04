@@ -89,7 +89,7 @@ XivelyKit.prototype.getName = function() {
 };
 
 XivelyKit.prototype.getType = function() {
-    return "Xively Data Viewer";
+    return "Distance Data Viewer";
 };
 
 /**

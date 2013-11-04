@@ -171,7 +171,7 @@ CREATE TABLE `uc_users` (
 
 LOCK TABLES `uc_users` WRITE;
 /*!40000 ALTER TABLE `uc_users` DISABLE KEYS */;
-INSERT INTO `uc_users` VALUES (1,'admin','admin','f0873108034a34cdf4ef81ccc5b685d188f14672e3b9f8062b58c26eb379cd47d','light@alum.mit.edu','17ea7d204cfb20623ad0c5cb79d1c4b8',1382035419,0,1,'Grand Poobah',1382035419,1382548712,'[{\"type\":\"Xively Data Viewer\",\"name\":\"My 1st Observation Kit\",\"configData\":\"{\\\"datastreams\\\":[{\\\"index\\\":0,\\\"datastream\\\":\\\"61916!random3600\\\"},{\\\"index\\\":0,\\\"name\\\":\\\"sin()\\\",\\\"datastream\\\":\\\"61916!sine3600\\\"},{\\\"index\\\":1,\\\"datastream\\\":\\\"2045025466!temp\\\"}],\\\"start\\\":\\\"2013-10-23T11:18:00.000Z\\\",\\\"end\\\":\\\"2013-10-23T17:18:00.000Z\\\"}\"}]',1382548714);
+INSERT INTO `uc_users` VALUES (1,'admin','admin','f0873108034a34cdf4ef81ccc5b685d188f14672e3b9f8062b58c26eb379cd47d','light@alum.mit.edu','17ea7d204cfb20623ad0c5cb79d1c4b8',1382035419,0,1,'Grand Poobah',1382035419,1382548712,'[{\"type\":\"Distance Data Viewer\",\"name\":\"My 1st Observation Kit\",\"configData\":\"{\\\"datastreams\\\":[{\\\"index\\\":0,\\\"datastream\\\":\\\"61916!random3600\\\"},{\\\"index\\\":0,\\\"name\\\":\\\"sin()\\\",\\\"datastream\\\":\\\"61916!sine3600\\\"},{\\\"index\\\":1,\\\"datastream\\\":\\\"2045025466!temp\\\"}],\\\"start\\\":\\\"2013-10-23T11:18:00.000Z\\\",\\\"end\\\":\\\"2013-10-23T17:18:00.000Z\\\"}\"}]',1382548714);
 /*!40000 ALTER TABLE `uc_users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
