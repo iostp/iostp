@@ -134,7 +134,7 @@ if(mysqli_connect_errno()) {
            });
 
            if( window.FileReader && window.FileList ) {
-               $("#kit_types").append("<input type='radio' name='kit_type' value='upload' >Upload file</input><br/>");
+               $("#kit_types").append("<input type='radio' name='kit_type' value='upload' >Import Kit</input><br/>");
            }
 
            var addObservationKitDialog = $( "#dialog" ).dialog({
@@ -294,7 +294,7 @@ if(mysqli_connect_errno()) {
         </a>
         <a class="ui-state-default ui-corner-all" id="downloadKit" href="#" style="padding:6px 6px 6px 17px;text-decoration:none;position:relative">
             <span class="ui-icon ui-icon-plus" style="position:absolute;top:4px;left:1px"></span>
-            Download Kit
+            Export Kit
         </a>
     </div>
 
