@@ -70,7 +70,7 @@ class User
 				$this->user_active = 0;
 				
 				$mail = new userCakeMail();
-				
+				$mail->setMimeType("text/html");
 				//Build the activation message
 				$activation_message = lang("ACCOUNT_ACTIVATION_MESSAGE",array($websiteUrl,$this->activation_token));
 				
