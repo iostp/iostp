@@ -79,7 +79,7 @@ if(!empty($_POST) && $emailActivation)
     					$mail->setMimeType("text/html");
 
 						
-						$activation_url = $websiteUrl."userAdmin/activate-account.php?token=".$new_activation_token;
+						$activation_url = "http://".$websiteUrl."userAdmin/activate-account.php?token=".$new_activation_token;
 						
 						//Setup our custom hooks
 						$hooks = array(
@@ -120,7 +120,6 @@ echo "
 <div id='wrapper'>
 <div id='top'><div id='logo'></div></div>
 <div id='content'>
-<h1>UserCake</h1>
 <h2>Resend Activation</h2>
 <div id='left-nav'>";
 

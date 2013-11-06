@@ -37,7 +37,7 @@ $lang = array_merge($lang,array(
 	"ACCOUNT_PASSWORD_INVALID"		=> "Current password doesn't match the one we have on record",	
 	"ACCOUNT_DETAILS_UPDATED"		=> "Account details updated",
 	"ACCOUNT_ACTIVATION_MESSAGE"		=> "You will need to activate your account before you can login. Please follow the link below to activate your account. \n\n
-	%m1%activate-account.php?token=%m2%",							
+	http://%m1%userAdmin/activate-account.php?token=%m2%",
 	"ACCOUNT_ACTIVATION_COMPLETE"		=> "You have successfully activated your account. You can now login <a href='http://IOSTP.org/userAdmin/login.php'>here</a>.",
 	"ACCOUNT_REGISTRATION_COMPLETE_TYPE1"	=> "You have successfully registered. You can now login <a href='http://IOSTP.org/userAdmin/login.php'>here</a>.",
 	"ACCOUNT_REGISTRATION_COMPLETE_TYPE2"	=> "You have successfully registered. You will soon receive an activation email. 

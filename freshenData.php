@@ -160,14 +160,14 @@ for( $page = 0; $nFeedsProcessed < $nFeedsToProcess || $nFeedsToProcess==-1; $pa
                  $dsUnitSymbol = '';
                  $dsUnit =  property_exists($ds,"unit") && property_exists($ds->unit,'label') ? $ds->unit->label : '';
 
-                 $live = false;
-                 if( property_exists($ds,'tags') ) {
-                     foreach( $ds->tags as $tag ) {
-                        if( $tag == "L1V3" ) $live = true;
-                     }
-                 }
+//                 $live = false;
+//                 if( property_exists($ds,'tags') ) {
+//                     foreach( $ds->tags as $tag ) {
+//                        if( $tag == "L1V3" ) $live = true;
+//                     }
+//                 }
 
-                 if( $includeNonLive || $live ) {
+//                 if( $includeNonLive || $live ) {
                      $insertDatastreamStmt->bind_param('sssss',$dsId,$id,$dsUnit,$dsUnitSymbol,$dsUID);
                      $insertDatastreamStmt->execute();
                      echo ".";
@@ -179,9 +179,9 @@ for( $page = 0; $nFeedsProcessed < $nFeedsToProcess || $nFeedsToProcess==-1; $pa
                            }
                         }
                      }
-                 } else {
-                     echo "\nFeed: ".$id."  Datastream: ".$dsId." is not live";
-                 }
+//                 } else {
+//                     echo "\nFeed: ".$id."  Datastream: ".$dsId." is not live";
+//                 }
               }
            }
        } else {

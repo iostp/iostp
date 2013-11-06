@@ -252,7 +252,7 @@ $(function () {
             },
             error: function() {
                 console.log("Error on server accessing /server/isSessionInactive.php");
-                window.location.replace("http://iostp.org/");
+                window.location.replace("/index.php");
             }
         });
     }, 30000);  //every 30 seconds

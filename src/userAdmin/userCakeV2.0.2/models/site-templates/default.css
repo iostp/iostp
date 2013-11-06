@@ -32,16 +32,16 @@ a {
 
 #top {
 	margin: 0 auto 0 auto;
-	background:url('images/top-bg.jpg') repeat-x;
+//	background:url('images/top-bg.jpg') repeat-x;
 	width:100%;
-	height:115px;
+	height:65px;
 }
 
 #logo {
 	margin: 0 auto 0 auto;
-	background:url('images/latest-build.gif');
-	width: 155px;
-	height: 124px;
+	background:url('/img/xivelyLogo.png');
+	width: 178px;
+	height: 65px;
 }
 
 #content {
