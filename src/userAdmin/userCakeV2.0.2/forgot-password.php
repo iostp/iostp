@@ -137,6 +137,7 @@ if(!empty($_POST))
 				//We use the activation token again for the url key it gets regenerated everytime it's used.
 				
 				$mail = new userCakeMail();
+                $mail->setMimeType("text/html");
 				$confirm_url = "http://".$websiteUrl."userAdmin/forgot-password.php?confirm=".$userdetails["activation_token"];
 				$deny_url = "http://".$websiteUrl."userAdmin/forgot-password.php?deny=".$userdetails["activation_token"];
 				
