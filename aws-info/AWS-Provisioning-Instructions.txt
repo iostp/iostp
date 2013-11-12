@@ -64,8 +64,10 @@ AWS Provisioning Procedure:
           $ /tmp/freshenData.php
 
   12) Setup a user "xively" which will run the freshenData.php cron job
-       $ sudo adduser --ingroup user xively
-       $ sudo passwd s3cr3t-xively!
+       $ sudo adduser --ingroup users xively
+          set password to be:  s3cr3t-xively!
+       $ echo "*/5 * * * *	xively	/opt/bitnami/php/bin/php /usr/bin/freshenData.php >> /tmp/iostp-cron.log" > /etc/cron.d/iostp
+       $ chmod o+r /etc/cron.d/iostp
 
   13) Give iostp.org a proper hostname (so sendmail will work)
        $ sudo hostname iostp.org
